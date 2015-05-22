@@ -1,25 +1,15 @@
 #include "cdisjointset.h"
 
-CDisjointSetUnion::CDisjointSetUnion()
-{
-
-}
-
-CDisjointSetUnion::~CDisjointSetUnion()
-{
-
-}
-
 void CDisjointSetUnion::makeSet(size_t element)
 {
-    assert(element < element_count);
+    assert(element < elementsAmount);
     parents[element] = element;
 }
 
 void CDisjointSetUnion::makeFullUnion(size_t size)
 {
     parents.resize(size);
-    element_count = size;
+    elementsAmount = size;
     for (int number = 0; number < size; ++number)
     {
         makeSet(number);
@@ -49,7 +39,7 @@ void CDisjointSetUnion::unite(size_t firstMember, size_t secondMember)
 
 void CDisjointSetUnion::printUnion()
 {
-    for (size_t element = 0; element < element_count; ++element)
+    for (size_t element = 0; element < elementsAmount; ++element)
     {
         std::cout << element << '(' << find(element) << ')' << '\n';
     }

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <algorithm>
 #include "cdisjointset.h"
+#include "cgraph.h"
 
 struct CPoint
 {
@@ -12,30 +13,18 @@ struct CPoint
     double x, y;
 };
 
-struct CEdge
-{
-    CEdge(size_t newFirstVertex, size_t newSecondVertex, double newWeight):
-        firstVertex(newFirstVertex),secondVertex(newSecondVertex), weight(newWeight){}
-    bool operator <(const CEdge &other) const
-    {
-        return weight < other.weight;
-    }
-    size_t firstVertex, secondVertex;
-    double weight;
-};
-
 class CPathFinder
 {
 public:
-    CPathFinder(std::vector<CPoint> initialPoints);
-    ~CPathFinder();
-    void findPath();
+    CPathFinder(const std::vector<CPoint> &initialPoints);
+    void findPath() const;
+    double checkPath(const std::vector<size_t> &path) const;
 private:
-    size_t pointsCount;
+    size_t pointsAmount;
     std::vector<CPoint> points;
-    double calculateDistance(CPoint first, CPoint second);
-    std::vector<CEdge> getAllEdges();
-    void kruskalFindMST();
+    double calculateDistance(const CPoint &first, const CPoint &second) const;
+    std::vector<CEdge> getAllEdges() const;
+    CGraph kruskalFindMST() const;
 };
 
 #endif // CPATHFINDER_H
