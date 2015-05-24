@@ -7,7 +7,8 @@ CPathFinder::CPathFinder(const std::vector<CPoint> &initialPoints):
 
 double CPathFinder::calculateDistance(const CPoint &first, const CPoint &second) const
 {
-    return sqrt((first.x - second.x)*(first.x - second.x) + (first.y - second.y)*(first.y - second.y));
+    return sqrt((first.x - second.x)*(first.x - second.x) +
+                (first.y - second.y)*(first.y - second.y));
 }
 
 std::vector<CEdge> CPathFinder::getAllEdges() const
@@ -30,6 +31,7 @@ CGraph CPathFinder::kruskalFindMST() const
     CDisjointSetUnion disjointSetUnion;
     disjointSetUnion.makeFullUnion(points.size());
     CGraph minimumSpanningTree(pointsAmount);
+
     for (CEdge currentEdge : edges)
     {
         if (disjointSetUnion.find(currentEdge.firstVertexIndex) != disjointSetUnion.find(currentEdge.secondVertexIndex))
@@ -41,11 +43,72 @@ CGraph CPathFinder::kruskalFindMST() const
     return minimumSpanningTree;
 }
 
-void CPathFinder::findPath() const
+void CPathFinder::bruteForceSearch(std::vector<bool> &visited, std::vector<size_t> &way,
+    double &wayLength, std::vector<size_t> &bestWay, double &bestWayLength) const
 {
-    CGraph minimumSpanningTree = kruskalFindMST();
-    std::vector<size_t> path = minimumSpanningTree.rebuildWay();
-    std::cout << checkPath(path) << '\n';
+    if (way.size() == pointsAmount)
+    {
+        way.push_back(way[0]);
+        double wayLength = checkPath(way);
+        if (wayLength < bestWayLength || bestWayLength < 0)
+        {
+            bestWay = way;
+            bestWayLength = wayLength;
+        }
+        way.pop_back();
+    }
+    else
+    {
+        for (size_t i = 0; i < pointsAmount; ++i)
+        {
+            if (!visited[i])
+            {
+                double newLength = 0;
+                if (!way.empty())
+                {
+                    newLength = wayLength + calculateDistance(points[*(way.end() - 1)], points[i]);
+                }
+                if (newLength >= bestWayLength && bestWayLength >= 0)
+                {
+                    continue;
+                }
+                visited[i] = true;
+                way.push_back(i);
+                bruteForceSearch(visited, way, newLength, bestWay, bestWayLength);
+                way.pop_back();
+                visited[i] = false;
+            }
+        }
+    }
+}
+
+std::vector<size_t> CPathFinder::findPath(CAlgorithm alhorithm) const
+{
+    std::vector<size_t> path;
+    path.reserve(pointsAmount);
+    switch (alhorithm)
+    {
+        case kruskalMST:
+        {
+            CGraph minimumSpanningTree = kruskalFindMST();
+            path = minimumSpanningTree.rebuildWay();
+            break;
+        }
+        case bruteForce:
+        {
+            std::vector<bool> visited(pointsAmount, false);
+            std::vector<size_t> way;
+            way.reserve(pointsAmount);
+            double bestLength = -1;
+            double currentLength = 0;
+            bruteForceSearch(visited, way, currentLength, path, bestLength);
+            break;
+        }
+        default:
+            assert(false);
+    }
+    std::cout << "Length is " << checkPath(path) << '\n';
+    return path;
 }
 
 double CPathFinder::checkPath(const std::vector<size_t> &path) const
@@ -57,8 +120,7 @@ double CPathFinder::checkPath(const std::vector<size_t> &path) const
     {
         if (i > 0)
         {
-            //assert(calculateDistance(points[path[i]], points[path[i - 1]]) >= 0);
-            sum = calculateDistance(points[path[i]], points[path[i - 1]]);
+            sum += calculateDistance(points[path[i]], points[path[i - 1]]);
         }
         if (!visited[path[i]])
         {
